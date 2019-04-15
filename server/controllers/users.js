@@ -23,7 +23,7 @@ module.exports = function (client) {
     return db.checkLogin(email, pass)
   }
 
-  users.create = async function (email, password) {
+  users.userRegister = async function (email, password) {
     const user = await users.getUser(email)
     if (user) {
       const err = Error('Account already exists')
@@ -31,7 +31,7 @@ module.exports = function (client) {
       throw err
     }
     const encryptedPass = await encrypt(password)
-    return db.createAccount(email, encryptedPass)
+    return db.addUser(email, encryptedPass)
   }
 
   users.getUser = async function (email) {
