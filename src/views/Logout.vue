@@ -7,24 +7,23 @@
                         <div>You have successfully logged out</div>
                     </div>
             </v-container>
-        </v-content> 
+        </v-content>
     </v-app>
 </template>
 
 <script>
 export default {
-  name: 'login',
+  name: 'logout',
   data: () => {
     return {
-      username: "",
-      password: ""
+      username: ''
+
     }
   },
   methods: {
-    login() {
+    logout () {
       window.user = {
-        username: this.username,
-        password: this.password
+        username: this.username
       }
       this.$router.push('home')
     }

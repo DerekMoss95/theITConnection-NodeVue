@@ -5,14 +5,22 @@
                 <router-view></router-view>
                     <div class="login">
                         <h1>Please log in to continue</h1>
-                        <form @submit.prevent="login">
-                            Username: <input type ="text" v-model="username"><br>
-                            Password: <input type ="password" v-model="password"><br>
-                            <input type ="submit" value="Login">
-                        </form>
+                      <form action="/login" method="post">
+                          <div>
+                              <label>Username:</label>
+                              <input type="text" name="username"/>
+                          </div>
+                          <div>
+                              <label>Password:</label>
+                              <input type="password" name="password"/>
+                          </div>
+                          <div>
+                              <input type="submit" value="Log In"/>
+                          </div>
+                      </form>
                     </div>
             </v-container>
-        </v-content> 
+        </v-content>
     </v-app>
 </template>
 
@@ -21,12 +29,12 @@ export default {
   name: 'login',
   data: () => {
     return {
-      username: "",
-      password: ""
+      username: '',
+      password: ''
     }
   },
   methods: {
-    login() {
+    login () {
       window.user = {
         username: this.username,
         password: this.password

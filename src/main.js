@@ -5,6 +5,10 @@ import router from './router'
 import store from './store'
 import 'vuetify/dist/vuetify.min.css' // Ensure you are using css-loader
 
+// Vue.config.productionTip = false
+
+// Vue.use(Vuetify)
+
 Vue.config.productionTip = false
 
 new Vue({

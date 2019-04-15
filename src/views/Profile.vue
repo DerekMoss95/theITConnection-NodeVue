@@ -12,37 +12,8 @@
   </v-app>
 </template>
 
-<!--<script>
-import router from '../router'
-export default {
-    name: 'profile',
-    props: [''],
-    computed: {
-        profile() {
-            if (this.$route) {
-                if ( this.$route.params.id == undefined) {
-                    return 'Hello, stranger!'
-                }
-                return `Hello, ${this.$route.params.id}!`
-            } else {
-                return 'Hello, stranger!'
-            }
-        }
-    },
-    data () {
-        return () => {
-            id: 'stranger'
-        }
-    }
-}
-</script>-->
 <script>
-  export default {
-    data: () => ({
-      drawer: null
-    }),
-    props: {
-      source: String
-    }
-  }
+export default {
+
+}
 </script>

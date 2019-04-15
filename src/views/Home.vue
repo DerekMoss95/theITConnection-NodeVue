@@ -12,9 +12,9 @@
 
 <script>
 export default {
+
 }
 </script>
-
 
 <style>
 #nav a {
