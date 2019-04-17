@@ -1,4 +1,4 @@
-<template>
+<!--<template>
     <v-app id="app">
         <v-content>
             <v-container>
@@ -14,9 +14,7 @@
                               <label>Password:</label>
                               <input type="password" name="password"/>
                           </div>
-                          <div>
-                              <input type="submit" value="Log In"/>
-                          </div>
+                              <button type="submit" @click="login()" value="Log In"/>
                       </form>
                     </div>
             </v-container>
@@ -34,12 +32,65 @@ export default {
     }
   },
   methods: {
-    login () {
+    userLogin () {
       window.user = {
         username: this.username,
         password: this.password
       }
       this.$router.push('home')
+    }
+  }
+}
+</script>-->
+
+
+<template>
+  <v-app id="app">
+    <router-view></router-view>
+    <v-content>
+      <v-container>
+        <div class="login">
+          <h2>Login</h2>
+          <form label-width="80px" @submit.prevent="login()">
+            Username
+            <input v-model="email" style="background-color: white; color: black"> <br>
+            Password
+            <input
+              type="password"
+              v-model="password"
+              style="background-color: white; color: black"
+            >
+            <v-btn type="primary" value="Submit" color="success">Submit</v-btn>
+            <br>
+            <br>
+            <p> {{errorMessage}} </p>
+          </form>
+        </div>
+      </v-container>
+    </v-content>
+  </v-app>
+</template>
+
+<script>
+export default {
+  name: 'login',
+  data: () => {
+    return {
+        email: '',
+        password: '',
+        errorMessage: ''
+    }
+  },
+  methods: {
+    error (error) {
+      this.errorMessage = error;
+      },
+    login () {
+      let email = this.email 
+      let password = this.password
+      this.$store.dispatch('login', { email, password })
+        .then(() => this.$router.push({name: 'home'}))
+        .catch(err => {this.errorMessage = err})
     }
   }
 }

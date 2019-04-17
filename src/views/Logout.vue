@@ -4,7 +4,10 @@
             <v-container>
                 <router-view></router-view>
                     <div class="logout">
-                        <div>You have successfully logged out</div>
+                        <div>Do you want to log out? </div>
+                        <form label-width="80px" @submit.prevent="logout()">
+                          <v-btn type="primary" value="Submit" color="success">Submit</v-btn>
+                        </form>
                     </div>
             </v-container>
         </v-content>
@@ -16,16 +19,13 @@ export default {
   name: 'logout',
   data: () => {
     return {
-      username: ''
-
     }
   },
   methods: {
-    logout () {
-      window.user = {
-        username: this.username
-      }
-      this.$router.push('home')
+    logout: function () {
+      this.$store.dispatch('logout')
+        .then(() => this.$router.push({name: 'home'}))
+        .catch(err => {this.errorMessage = err})
     }
   }
 }

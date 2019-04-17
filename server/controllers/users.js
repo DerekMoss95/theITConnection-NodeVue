@@ -1,11 +1,11 @@
-const pg_db = require('../database/postgres_db')
+const dbUsers = require('../database/users')
 const crypto = require('crypto')
 
-//const secret = process.env.secret || 'this is a terrible secret'
+const secret = process.env.secret || 'this is a terrible secret'
 
-module.exports = function (client) {
+module.exports = function (dbClient) {
   const users = {}
-  const db = pg_db(client)
+  const db = dbUsers(dbClient)
 
   users.changePassword = async function (email, oldPassword, newPassword) {
     const passed = await users.checkLogin(email, oldPassword)
@@ -18,39 +18,115 @@ module.exports = function (client) {
     return db.updatePassword(email, password)
   }
 
-  users.checkLogin = async function (email, password) {
-    const pass = await encrypt(password)
-    return db.checkLogin(email, pass)
+  users.checkLogin = async function (isLoggedIn, email, password) {
+    const loginOk = await db.checkLogin(isLoggedIn, email, password)
+    console.log("loginOk: " + loginOk)
+    try {
+      if (loginOk === 'true') {
+        let statusCode = 200
+        console.log(statusCode)
+        return statusCode
+      }
+      else {
+        let statusCode = 400
+        console.log(statusCode)
+        return statusCode
+      }
+    }
+    catch {
+      if (!loginOk) {
+        const err = Error('incorrect email or password')
+        err.statusCode = 400
+        let statusCode = 400
+        console.log(statusCode)
+        return statusCode
+      }    
+    }
   }
 
-  users.userRegister = async function (email, password) {
-    const user = await users.getUser(email)
-    if (user) {
-      const err = Error('Account already exists')
-      err.statusCode = 400
-      throw err
+  users.logout = async function (isLoggedIn, email) {
+    const logoutOk = await db.logout(isLoggedIn, email)
+    console.log("logoutOk: " + logoutOk)
+    try {
+      if (logoutOk === 'true') {
+         let statusCode = 200
+         console.log(statusCode)
+         return statusCode
+      }
+      else {
+        let statusCode = 400
+        console.log(statusCode)
+        return statusCode
+      }
     }
-    const encryptedPass = await encrypt(password)
-    return db.addUser(email, encryptedPass)
+    catch {
+      if (!logoutOk) {
+        const err = Error('failed to log out')
+        err.statusCode = 400
+         let statusCode = 400
+         console.log(statusCode)
+         return statusCode
+      }    
+    }
+  }
+
+  users.register = async function (email, password, firstName, lastName, phone, isLoggedIn) {
+    const registerOk = await db.createAccount(email, password, firstName, lastName, phone, isLoggedIn)
+    console.log("registerOk: " + registerOk)
+    try {
+      if (registerOk === true) {
+        let statusCode = 200
+        console.log(statusCode)
+        return statusCode
+      }
+      else {
+        let statusCode = 400
+        console.log(statusCode)
+        return statusCode
+      }
+    }
+    catch {
+      if (!registerOk) {
+        const err = Error('couldnt register')
+        err.statusCode = 400
+        let statusCode = 400
+        console.log(statusCode)
+        return statusCode
+      }    
+    }
   }
 
   users.getUser = async function (email) {
-    return db.getUser(email)
+    const user = await db.getUser(email)
+    console.log(user)
+    return user
   }
 
-  users.login = async function (email, password) {
-    const loginOk = await users.checkLogin(email, password)
-    if (!loginOk) return null
-    await db.login(email)
-    return db.getUser(email)
-  }
-
-  users.logout = async function (email) {
-    return db.logout(email)
-  }
-
-  users.update = async function (email, name, phone) {
-    return db.updateUser(email, name, phone)
+  users.projects = async function () {
+    const projectsOk = await db.projects()
+    console.log("projectsOk: " + projectsOk)
+    try {
+      return projectsOk
+      // if (projectsOK === true) {
+      //   let statusCode = 200
+      //   console.log(statusCode)
+      //   return statusCode
+      // }
+      // else {
+      //   let statusCode = 400
+      //   console.log(statusCode)
+      //   return statusCode
+      // }
+    }
+    catch {
+      // if (!projectsOK) {
+      //   const err = Error('couldnt register')
+      //   err.statusCode = 400
+      //   let statusCode = 400
+      //   console.log(statusCode)
+      //   return statusCode
+      // }    
+    }
   }
 
   return users

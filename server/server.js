@@ -1,34 +1,43 @@
+const usersController = require('./controllers/users')
+const api = require('./api')
 const cookieParser = require('cookie-parser')
 const express = require('express')
 const LocalStrategy = require('passport-local').Strategy
 const passport = require('passport')
+const path = require('path')
 const session = require('express-session')
-const api = require('./api')
 
+module.exports = async function (dbClient, port = 0) {
 
-module.exports = function () {
+  const users = usersController(dbClient)
   const app = express()
-  let visits = {}
 
-  app.post('/login',
-    passport.authenticate('local'),
-    function (req, res) {
-      res.redirect('/new_project' + req.user.username)
-    })
-
-  passport.use(new LocalStrategy(function (username, password, done) {
-    if (username === 'admin' && password === 'password') {
-      return done(null, { username: username, visits: [] })
+  // create login strategy
+  const localStrategy = new LocalStrategy(
+    { usernameField: 'email', passwordField: 'password', passReqToCallback: true },
+    async function (req, e, p, done) {
+      try {
+        const { email, password } = req.body
+        const user = await users.login(email, password)
+        done(null, user || false)
+      } catch (err) {
+        done(err)
+      }
     }
-    return done(null, false)
-  }))
+  )
 
+  // tell passport to use a local strategy and tell it how to validate a username and password
+  passport.use('local-login', localStrategy)
+
+  // tell passport how to turn a user into serialized data that will be stored with the session
   passport.serializeUser(function (user, done) {
-    done(null, user.username)
+    done(null, user.email)
   })
 
-  passport.deserializeUser(function (id, done) {
-    done(null, { username: id })
+  // tell passport how to go from the serialized data back to the user
+  passport.deserializeUser(function (email, done) {
+    const user = users.getUser(email)
+    done(null, user || false)
   })
 
   app.use(express.urlencoded({ extended: true }))
@@ -36,64 +45,106 @@ module.exports = function () {
   app.use(session({ secret: 'secret key', resave: false, saveUninitialized: true }))
   app.use(passport.initialize())
   app.use(passport.session())
-
-  app.use('/api', api)
-
-  app.get('/home', function (req, res) {
-    if (req.user) {
-      visits[req.user.username].push('/home')
-      return res.send('Hello, ' + req.user.username)
-    }
-    res.send('1')
-  })
-
-  app.get('/profile', function (req, res) {
-    if (req.user) {
-      visits[req.user.username].push('/profile')
-      return res.send('Hello, ' + req.user.username)
-    }
-    res.send('2')
-  })
-
-  app.get('/new_project', function (req, res) {
-    if (req.user) {
-      visits[req.user.username].push('/new_project')
-      return res.send('Hello, ' + req.user.username)
-    }
-    res.send('3')
-  })
-
-  app.get('/visits', function (req, res) {
-    if (req.user) {
-      return res.send(visits[req.user.username])
+  app.use(express.json());
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+    // intercept OPTIONS method
+    if ('OPTIONS' == req.method) {
+    res.sendStatus(200);
     } else {
-      let emptyVisits = new Array()
-      return res.send(emptyVisits)
+    next();
     }
   })
 
-  app.put('/login',
-    passport.authenticate('local'),
-    function (req, res) {
-      visits[req.user.username] = new Array()
-      res.send('You are authenticated, ' + req.user.username)
-    })
 
-  app.put('/logout', function (req, res) {
-    req.logout()
-    arr = []
-    res.send('You have logged out.')
+  app.post('/api/users/login', async (req, res) => {
+      console.log(req.body.isLoggedIn + req.body.email + req.body.password)
+      const response = await users.checkLogin(req.body.isLoggedIn, req.body.email, req.body.password)
+      console.log("response: " + response)
+      if (response === 200){
+        res.sendStatus(200)
+      }
+      else {
+        res.sendStatus(400)
+      }
   })
 
-  app.use((err, req, res, next) => {
-    console.log(err.stack)
-    res.status(500).send('Internal server error')
-  })
+  app.post('/api/users/logout', async (req, res) => {
+    console.log(req.body.isLoggedIn + req.body.email)
+    const response = await users.logout(req.body.isLoggedIn, req.body.email)
+    console.log("response: " + response)
+    if (response === 200){
+      res.sendStatus(200)
+    }
+    else {
+      res.sendStatus(400)
+    }
+})
 
-  return new Promise((resolve, reject) => {
-    const listener = app.listen(3000, function (err) {
-      if (err) return reject(err)
-      resolve(listener)
+app.post('/api/users/register', async (req, res) => {
+  console.log(req.body.email + req.body.password + req.body.firstName + req.body.lastName + req.body.phone + req.body.isLoggedIn)
+  const response = await users.register(req.body.email, req.body.password, req.body.firstName, req.body.lastName, req.body.phone, req.body.isLoggedIn)
+  console.log("response: " + response)
+  if (response === 200){
+    res.sendStatus(200)
+  }
+  else {
+    res.sendStatus(400)
+  }
+})
+
+app.get('/api/projects/all', async (req, res) => {
+  const response = await users.projects()
+  console.log("response: " + response)
+     //res.sendStatus(200)
+     res.send(response)
+  // if (response === 200){
+  //   res.sendStatus(200)
+  //   return response
+  // }
+  // else {
+  //   res.sendStatus(400)
+  // }
+})
+
+  app.post('/api/users/getUser', async (req, res) => {
+    console.log(req.body.email)
+    const response = await users.getUser(req.body.email)
+    console.log("response: " + response)
+    if (response === 200){
+      res.sendStatus(200)
+      res.send(getUser(req.body.email))
+      // return user
+    }
+    else {
+      res.sendStatus(400)
+    }
+})
+
+
+
+  const buildPath = path.resolve(__dirname, '../dist')
+  app.use(express.static(buildPath))
+
+  // HTML5 History Mode routing
+  const indexPath = path.resolve(buildPath, 'index.html')
+
+
+  return new Promise(function (resolve, reject) {
+    const listener = app.listen(port, function (err) {
+      if (err) {
+        reject(err + "listener error")
+      } else {
+        resolve({
+          port: listener.address().port,
+          stop: () => {
+            listener.close()
+            console.log('Server stopped')
+          }
+        })
+      }
     })
   })
 }
