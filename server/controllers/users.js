@@ -102,11 +102,73 @@ module.exports = function (dbClient) {
     return user
   }
 
+
+
+  users.getUserEmail = async function (email) {
+    const user = await db.getUserEmail(email)
+    console.log(user)
+    return user
+  }
+
   users.projects = async function () {
     const projectsOk = await db.projects()
     console.log("projectsOk: " + projectsOk)
     try {
       return projectsOk
+      // if (projectsOK === true) {
+      //   let statusCode = 200
+      //   console.log(statusCode)
+      //   return statusCode
+      // }
+      // else {
+      //   let statusCode = 400
+      //   console.log(statusCode)
+      //   return statusCode
+      // }
+    }
+    catch {
+      // if (!projectsOK) {
+      //   const err = Error('couldnt register')
+      //   err.statusCode = 400
+      //   let statusCode = 400
+      //   console.log(statusCode)
+      //   return statusCode
+      // }    
+    }
+  }
+
+  users.createProject = async function (email, projectName, projectType, projectSkills, projectLanguages, projectHardware, projectContributions, projectMembers) {
+    const createProjectOk = await db.createProject(email, projectName, projectType, projectSkills, projectLanguages, projectHardware, projectContributions, projectMembers)
+    console.log("projects creation Ok: " + createProjectOk)
+    try {
+      if (createProjectOk === true) {
+        let statusCode = 200
+        console.log(statusCode)
+        return statusCode
+      }
+      else {
+        let statusCode = 400
+        console.log(statusCode)
+        return statusCode
+      }
+    }
+    catch {
+      if (!createProjectOk) {
+        const err = Error('couldnt register')
+        err.statusCode = 400
+        let statusCode = 400
+        console.log(statusCode)
+        return statusCode
+      }    
+    }
+  }
+
+
+  users.userProjects = async function (email) {
+    const userProjectsOk = await db.userProjects(email)
+    console.log("userProjects: " + userProjectsOk)
+    try {
+      return userProjectsOk
       // if (projectsOK === true) {
       //   let statusCode = 200
       //   console.log(statusCode)

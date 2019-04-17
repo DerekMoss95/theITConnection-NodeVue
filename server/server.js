@@ -109,6 +109,33 @@ app.get('/api/projects/all', async (req, res) => {
   // }
 })
 
+app.post('/api/projects/createProject', async (req, res) => {
+  console.log(req.body.email + req.body.projectName + req.body.projectType + req.body.projectSkills + req.body.projectLanguages + req.body.projectHardware + req.body.projectContributions + req.body.projectMembers)
+  const response = await users.createProject(req.body.email, req.body.projectName, req.body.projectType, req.body.projectSkills, req.body.projectLanguages, req.body.projectHardware, req.body.projectContributions, req.body.projectMembers)
+  console.log("response: " + response)
+  if (response === 200){
+    res.sendStatus(200)
+  }
+  else {
+    res.sendStatus(400)
+  }
+})
+
+
+app.post('/api/projects/userProjects', async (req, res) => {
+  const response = await users.userProjects(req.body.email)
+  console.log("response: " + response)
+     //res.sendStatus(200)
+     res.send(response)
+  // if (response === 200){
+  //   res.sendStatus(200)
+  //   return response
+  // }
+  // else {
+  //   res.sendStatus(400)
+  // }
+})
+
   app.post('/api/users/getUser', async (req, res) => {
     console.log(req.body.email)
     const response = await users.getUser(req.body.email)

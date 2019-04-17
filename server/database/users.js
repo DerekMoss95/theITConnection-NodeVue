@@ -71,10 +71,31 @@ module.exports = function (client) {
   dbUsers.getUser = async function (email) {
     try {
       const res  = await client.query({
-        text: 'SELECT firstname FROM users WHERE email = $1',
+        text: 'SELECT firstname, FROM users WHERE email = $1',
         values: [ email ]
       })
       const user = res.rows[0].firstname
+      console.log(user)
+      return user
+      // if (rowCount > 0) {
+      //   return rowCount
+      // }
+      // else {
+      //   return "errrorr"
+      // }
+    }
+    catch {
+      return "ERRRRROOOOORRR"
+    }
+  }
+
+  dbUsers.getUserEmail = async function (email) {
+    try {
+      const res  = await client.query({
+        text: 'SELECT email FROM users WHERE email = $1',
+        values: [ email ]
+      })
+      const user = res.rows[0].email
       console.log(user)
       return user
       // if (rowCount > 0) {
@@ -93,10 +114,10 @@ module.exports = function (client) {
   dbUsers.projects = async function () {
     try {
       const res  = await client.query({
-        text: 'SELECT * FROM users;',
+        text: 'SELECT * FROM projects;',
         values: [ ]
       })
-      const user = res.rows[0]
+      const user = res.rows
       console.log(user)
       return user
       // if (rowCount > 0) {
@@ -110,6 +131,47 @@ module.exports = function (client) {
       return "ERRRRROOOOORRR"
     }
   }
+
+  dbUsers.createProject = async function (email, projectName, projectType, projectSkills, projectLanguages, projectHardware, projectContributions, projectMembers) {
+    try {
+      const { rowCount } = await client.query({
+        text: 'INSERT INTO projects (projectowner, projectname, projecttype, projectskills, projectlanguages, projecthardware, projectcontributions, projectmembers) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        values: [ email, projectName, projectType, projectSkills, projectLanguages, projectHardware, projectContributions, projectMembers ]
+      })
+      console.log(rowCount)
+      if (rowCount > 0) {
+        return rowCount > 0
+      }
+      else {
+        return "errrorr create Project"
+      }
+    }
+    catch {
+      return "ERRRRROOOOORRR"
+    }
+  }
+
+  dbUsers.userProjects = async function (email) {
+    try {
+      const res  = await client.query({
+        text: 'SELECT * FROM projects WHERE projectowner = $1;',
+        values: [ email]
+      })
+      const user = res.rows
+      console.log(user)
+      return user
+      // if (rowCount > 0) {
+      //   return rowCount
+      // }
+      // else {
+      //   return "errrorr"
+      // }
+    }
+    catch {
+      return "ERRRRROOOOORRR"
+    }
+  }
+
 
   return dbUsers
 }

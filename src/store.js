@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from 'axios'
+import createPersistedState from 'vuex-persistedstate'
+import * as Cookies from 'js-cookie'
 
 const LOGIN = "LOGIN";
 const LOGIN_SUCCESS = "LOGIN_SUCCESS";
@@ -9,6 +11,12 @@ const LOGOUT = "LOGOUT";
 Vue.use(Vuex)
 
 export default new Vuex.Store({
+  plugins: [
+    createPersistedState({
+      getState: (key) => Cookies.getJSON(key),
+      setState: (key, state) => Cookies.set(key, state, { expires: 3, secure: true })
+    })
+  ],
   state: {
     layout: 'default',
     username: '',
@@ -18,6 +26,7 @@ export default new Vuex.Store({
     email: '',
     status: '',
     token: localStorage.getItem('token') || '',
+    name: localStorage.getItem('name'),
     user: {},
     isLoggedIn: !!localStorage.getItem('token'),
     pending: ''
@@ -35,10 +44,15 @@ export default new Vuex.Store({
     },
     [LOGIN_SUCCESS] (state, payload) {
       state.isLoggedIn = true;
-      state.firstName = payload
+      // state.firstName = payload
+      // state.email = payload
       state.pending = false;
     },
     [LOGOUT] (state) {
+      localStorage.setItem("name", null);
+      localStorage.removeItem("token");
+      localStorage.removeItem("name");
+      state.name = null
       state.isLoggedIn = false;
     },
     logout (state) {
@@ -54,7 +68,7 @@ export default new Vuex.Store({
       return state.isLoggedIn
     },
     getUser: state => {
-      return state.firstName
+      return state.name
     }
   },
   actions: {
@@ -67,7 +81,7 @@ export default new Vuex.Store({
       email,
       password
     }) {
-      commit(LOGIN); // show spinner
+      commit(LOGIN);
       const res = await axios({
         method: 'post',
         data: {
@@ -77,8 +91,10 @@ export default new Vuex.Store({
         },
         url: 'http://localhost:3000/api/users/login'
       })
-      console.log("response: " + res)
+      console.log("response: " + email)
       localStorage.setItem("token", "JWT");
+      localStorage.setItem("name", email);
+      state.name = email
       commit(LOGIN_SUCCESS , email );
     },
     async register ({
@@ -93,7 +109,7 @@ export default new Vuex.Store({
       lastName,
       phone
     }) {
-      commit(LOGIN); // show spinner
+      commit(LOGIN);
       const res = await axios({
         method: 'post',
         data: {
@@ -108,26 +124,10 @@ export default new Vuex.Store({
       })
       console.log("response: " + res)
       localStorage.setItem("token", "JWT");
+      localStorage.setItem("name", email);
+      state.name = email
       commit(LOGIN_SUCCESS , email );
     },
-    // async getUser ({
-    //   commit,
-    //   dispatch,
-    //   getters,
-    //   state
-    // }, {
-    //   email
-    // }) {
-    //   const userRes = await axios({
-    //     method: 'post',
-    //     data: {
-    //       email: email,
-    //     },
-    //     url: 'http://localhost:3000/api/users/getUser'
-    //   })
-    //   console.log("response: " + res)
-    //   commit(UPDATE_USER, email);
-    // },
     async logout ({
       commit,
       dispatch,
@@ -143,34 +143,14 @@ export default new Vuex.Store({
         url: 'http://localhost:3000/api/users/logout'
       })
       console.log("response: " + res)
-      localStorage.removeItem("token");
       commit(LOGOUT);
     },
-    // async userLogout ({
-    //   commit
-    // }, {
-    //   email
-    // }) {
-    //   await axios({
-    //     method: 'put',
-    //     url: '/api/users/logout',
-    //     data: {
-    //       email
-    //     },
-    //     body: {
-    //       email: email
-    //     }
-    //   })
-    //   commit('user-logout', {
-    //     email
-    //   })
-    //   localStorage.removeItem("token");
-    //   commit(LOGOUT);
-    // },
     async projectCreate ({
-      commit
+      commit,
+      dispatch,
+      getters,
+      state
     }, {
-      email,
       projectName,
       projectType,
       projectSkills,
@@ -179,21 +159,10 @@ export default new Vuex.Store({
       projectContributions,
       projectMembers
     }) {
-      await axios({
+      const res = await axios({
         method: 'post',
-        url: '/api/projects/projectCreate',
         data: {
-          email,
-          projectName,
-          projectType,
-          projectSkills,
-          projectLanguages,
-          projectHardware,
-          projectContributions,
-          projectMembers
-        },
-        body: {
-          email: email,
+          email: getters.getUser,
           projectName: projectName,
           projectType: projectType,
           projectSkills: projectSkills,
@@ -201,18 +170,10 @@ export default new Vuex.Store({
           projectHardware: projectHardware,
           projectContributions: projectContributions,
           projectMembers: projectMembers
-        }
+        },
+        url: 'http://localhost:3000/api/projects/createProject',
       })
-      commit('create-project', {
-        email,
-        projectName,
-        projectType,
-        projectSkills,
-        projectLanguages,
-        projectHardware,
-        projectContributions,
-        projectMembers
-      })
+      console.log("response: " + res)
     },
     async projectJoin ({
       commit

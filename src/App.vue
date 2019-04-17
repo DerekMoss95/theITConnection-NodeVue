@@ -25,6 +25,9 @@ export default {
   computed: {
     layout () {
       return this.$store.getters.layout
+    },
+    isLoggedIn() {
+      return this.$store.getters.isLoggedIn;
     }
   },
   components: {
